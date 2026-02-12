@@ -25,19 +25,43 @@ public class Order {
         this.quantity = quantity;
     }
 
-    public Long getProductId(){
-      return productId;
+    public Long getId() {
+        return id;
     }
 
-    public int getQuantity(){
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setTotalPrice(double newTotalPrice) {
-        this.totalPrice = newTotalPrice;
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
-    public void setStatus(String newStatus){
-        this.status = newStatus;
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
