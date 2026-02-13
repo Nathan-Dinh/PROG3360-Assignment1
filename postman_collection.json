@@ -1,0 +1,439 @@
+{
+  "info": {
+    "name": "PROG3360 Assignment 1 - Microservices",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "product_url",
+      "value": "http://localhost:6767"
+    },
+    {
+      "key": "order_url",
+      "value": "http://localhost:7676"
+    },
+    {
+      "key": "product_id",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Product Service",
+      "item": [
+        {
+          "name": "Create Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has id, name, price, quantity', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('price');",
+                  "    pm.expect(json).to.have.property('quantity');",
+                  "});",
+                  "",
+                  "pm.test('Product name matches', function () {",
+                  "    pm.expect(pm.response.json().name).to.eql('Test Laptop');",
+                  "});",
+                  "",
+                  "pm.test('Price is correct', function () {",
+                  "    pm.expect(pm.response.json().price).to.eql(999.99);",
+                  "});",
+                  "",
+                  "pm.test('Quantity is correct', function () {",
+                  "    pm.expect(pm.response.json().quantity).to.eql(10);",
+                  "});",
+                  "",
+                  "// Save product ID for later requests",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('product_id', json.id);",
+                  "console.log('Saved product_id:', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{product_url}}/products",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Laptop\",\n  \"price\": 999.99,\n  \"quantity\": 10\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Array is not empty', function () {",
+                  "    pm.expect(pm.response.json().length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test('Each product has required fields', function () {",
+                  "    pm.response.json().forEach(function (product) {",
+                  "        pm.expect(product).to.have.property('id');",
+                  "        pm.expect(product).to.have.property('name');",
+                  "        pm.expect(product).to.have.property('price');",
+                  "        pm.expect(product).to.have.property('quantity');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{product_url}}/products"
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct id', function () {",
+                  "    var productId = pm.collectionVariables.get('product_id');",
+                  "    pm.expect(pm.response.json().id).to.eql(Number(productId));",
+                  "});",
+                  "",
+                  "pm.test('Response has all required fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('price');",
+                  "    pm.expect(json).to.have.property('quantity');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{product_url}}/products/{{product_id}}"
+          }
+        },
+        {
+          "name": "Delete Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 or 204', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{product_url}}/products/{{product_id}}"
+          }
+        },
+        {
+          "name": "Get Deleted Product (expect error)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 4xx or 5xx after deletion', function () {",
+                  "    pm.expect(pm.response.code).to.be.within(400, 599);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{product_url}}/products/{{product_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "Setup - Create Product for Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Save product ID for order tests",
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('product_id', json.id);",
+                  "console.log('Setup product_id:', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{product_url}}/products",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Order Test Product\",\n  \"price\": 50.00,\n  \"quantity\": 20\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Order - Valid",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has required fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('productId');",
+                  "    pm.expect(json).to.have.property('quantity');",
+                  "    pm.expect(json).to.have.property('totalPrice');",
+                  "    pm.expect(json).to.have.property('status');",
+                  "});",
+                  "",
+                  "pm.test('Status is PENDING', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('PENDING');",
+                  "});",
+                  "",
+                  "pm.test('Total price is calculated correctly (50.00 * 3 = 150.00)', function () {",
+                  "    pm.expect(pm.response.json().totalPrice).to.eql(150.00);",
+                  "});",
+                  "",
+                  "pm.test('Quantity matches request', function () {",
+                  "    pm.expect(pm.response.json().quantity).to.eql(3);",
+                  "});",
+                  "",
+                  "// Save order ID for later requests",
+                  "pm.collectionVariables.set('order_id', pm.response.json().id);",
+                  "console.log('Saved order_id:', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{order_url}}/orders",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 3\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Order - Product Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response body mentions product does not exist', function () {",
+                  "    pm.expect(pm.response.text()).to.include('does not exist');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{order_url}}/orders",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 99999,\n  \"quantity\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Order - Insufficient Stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response mentions insufficient stock', function () {",
+                  "    pm.expect(pm.response.text()).to.include('exceeds available stock');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{order_url}}/orders",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 99999\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Array is not empty', function () {",
+                  "    pm.expect(pm.response.json().length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test('Each order has required fields', function () {",
+                  "    pm.response.json().forEach(function (order) {",
+                  "        pm.expect(order).to.have.property('id');",
+                  "        pm.expect(order).to.have.property('productId');",
+                  "        pm.expect(order).to.have.property('quantity');",
+                  "        pm.expect(order).to.have.property('totalPrice');",
+                  "        pm.expect(order).to.have.property('status');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{order_url}}/orders"
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct id', function () {",
+                  "    var orderId = pm.collectionVariables.get('order_id');",
+                  "    pm.expect(pm.response.json().id).to.eql(Number(orderId));",
+                  "});",
+                  "",
+                  "pm.test('Response has all required fields', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('productId');",
+                  "    pm.expect(json).to.have.property('quantity');",
+                  "    pm.expect(json).to.have.property('totalPrice');",
+                  "    pm.expect(json).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{order_url}}/orders/{{order_id}}"
+          }
+        },
+        {
+          "name": "Get Order by ID - Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{order_url}}/orders/99999"
+          }
+        }
+      ]
+    }
+  ]
+}
